@@ -17,10 +17,13 @@ export default defineConfig({
     // changeOrigin rewrites the Host header to the backend, which makes Spring
     // build the OAuth redirect_uri as http://localhost:8080/... - the exact URI
     // registered in Google Cloud.
+    // Note the OAuth paths must stay narrow. A Vite proxy key is a PREFIX match,
+    // so proxying "/login" would also swallow the app's own /login route, and a
+    // deep link to it would return 500 from the backend instead of the SPA.
     proxy: {
       '/api': { target: 'http://localhost:8080', changeOrigin: true },
       '/oauth2': { target: 'http://localhost:8080', changeOrigin: true },
-      '/login': { target: 'http://localhost:8080', changeOrigin: true },
+      '/login/oauth2': { target: 'http://localhost:8080', changeOrigin: true },
     },
   },
 })

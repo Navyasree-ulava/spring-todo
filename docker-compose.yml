@@ -37,5 +37,23 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-PASTE_YOUR_GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-PASTE_YOUR_GOOGLE_CLIENT_SECRET}
 
+  frontend:
+    build:
+      context: ./frontend
+    container_name: todo-frontend
+    restart: unless-stopped
+    ports:
+      # Same port as the Vite dev server, so switching between the two
+      # workflows does not mean changing any URLs.
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
 volumes:
   db-data:
