@@ -7,8 +7,6 @@ import {
   Pencil,
   Plus,
   Search,
-  Sun,
-  Moon,
   Trash2,
   X,
 } from 'lucide-react'
@@ -17,7 +15,7 @@ import { toast } from 'sonner'
 import { ApiError, api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 import type { Priority, Todo, TodoStats, TodoStatus } from '@/lib/types'
-import { useTheme } from 'next-themes'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -354,12 +352,6 @@ export default function TodoPage() {
 
 function Header() {
   const { user, logout } = useAuth()
-  const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  // next-themes cannot know the theme during SSR/first paint, so the icon is
-  // only rendered after mount to avoid a hydration mismatch.
-  useEffect(() => setMounted(true), [])
 
   const initials = (user?.displayName ?? '?')
     .split(' ')
@@ -391,18 +383,7 @@ function Header() {
           </span>
         )}
 
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label={mounted && resolvedTheme === 'dark' ? 'Switch to light' : 'Switch to dark'}
-          onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-        >
-          {mounted && resolvedTheme === 'dark' ? (
-            <Sun className="size-4" />
-          ) : (
-            <Moon className="size-4" />
-          )}
-        </Button>
+        <ThemeToggle />
 
         <Button variant="ghost" size="icon-sm" aria-label="Sign out" onClick={() => logout()}>
           <LogOut className="size-4" />
@@ -552,24 +533,25 @@ function TodoRow({
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label="Task actions"
-              // Hidden until hover so the list stays calm, but always reachable
-              // by keyboard because focus-within also reveals it.
-              className="opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100"
+              aria-label={`Actions for ${todo.title}`}
+              // Muted rather than hidden: `opacity-0` until hover looks tidy on a
+              // desktop but makes the control unreachable on touch, where hover
+              // never fires. data-popup-open is Base UI's attribute (Radix uses
+              // data-state, which silently never matches here).
+              className="text-muted-foreground opacity-60 transition-opacity hover:text-foreground hover:opacity-100 focus-visible:opacity-100 data-[popup-open]:opacity-100"
             />
           }
         >
           <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">
-          <DropdownMenuItem onSelect={onEdit}>
+          {/* Base UI's Menu.Item fires onClick. It has no onSelect prop, so
+              passing one was silently ignored and these buttons did nothing. */}
+          <DropdownMenuItem onClick={onEdit}>
             <Pencil className="size-3.5" />
             Edit
           </DropdownMenuItem>
-          <DropdownMenuItem
-            onSelect={onDelete}
-            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-          >
+          <DropdownMenuItem variant="destructive" onClick={onDelete}>
             <Trash2 className="size-3.5" />
             Delete
           </DropdownMenuItem>

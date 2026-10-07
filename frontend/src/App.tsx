@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 
 import { AuthProvider, useAuth } from '@/lib/auth'
+import LandingPage from '@/pages/LandingPage'
 import LoginPage from '@/pages/LoginPage'
 import TodoPage from '@/pages/TodoPage'
 import OAuthCallbackPage from '@/pages/OAuthCallbackPage'
@@ -18,12 +19,18 @@ function FullPageSpinner() {
   )
 }
 
-function RequireAuth({ children }: { children: React.ReactNode }) {
+function RequireAuth({
+  children,
+  fallback = null,
+}: {
+  children: React.ReactNode
+  fallback?: React.ReactNode
+}) {
   const { user, loading } = useAuth()
   // Wait for the /me check before deciding, otherwise a refresh would flash the
   // login screen for a signed-in user.
   if (loading) return <FullPageSpinner />
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <>{fallback}</>
   return <>{children}</>
 }
 
@@ -39,6 +46,16 @@ export default function App() {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <AuthProvider>
         <Routes>
+          {/* Signed out visitors get the landing page; signed-in users skip it
+              straight to their list, so / never shows marketing to a real user. */}
+          <Route
+            path="/"
+            element={
+              <RequireAuth fallback={<LandingPage />}>
+                <TodoPage />
+              </RequireAuth>
+            }
+          />
           <Route
             path="/login"
             element={
@@ -52,14 +69,6 @@ export default function App() {
             element={
               <RequireAuth>
                 <OAuthCallbackPage />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <RequireAuth>
-                <TodoPage />
               </RequireAuth>
             }
           />
