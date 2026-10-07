@@ -1,0 +1,10 @@
+# Container profile: backend talks to the `db` service on the compose network.
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/todoapp
+    username: todo
+    password: todo
+
+app:
+  jwt:
+    secure: false

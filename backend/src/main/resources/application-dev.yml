@@ -1,0 +1,11 @@
+# Local development: backend runs on your machine, Postgres runs in Docker.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/todoapp
+    username: todo
+    password: todo
+
+logging:
+  level:
+    com.todoapp: DEBUG
+    org.hibernate.SQL: DEBUG

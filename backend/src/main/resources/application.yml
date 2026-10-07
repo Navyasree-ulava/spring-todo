@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: todo-app
+  profiles:
+    default: dev
+
+  jpa:
+    # Flyway owns the schema. Hibernate only verifies it matches the entities.
+    hibernate:
+      ddl-auto: validate
+    # Avoids holding a DB connection open for the whole HTTP request
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    # HS256 signing key - must be >= 32 bytes. Override with JWT_SECRET in production.
+    secret: ${JWT_SECRET:dev-only-insecure-key-please-override-me-1234567890}
+    expiration: 7d
+    cookie-name: todo_token
+    secure: false
+  google:
+    # >>> PASTE YOUR GOOGLE CREDENTIALS HERE (or set GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET env vars) <<<
+    client-id: ${GOOGLE_CLIENT_ID:PASTE_YOUR_GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET:PASTE_YOUR_GOOGLE_CLIENT_SECRET}
+
+logging:
+  level:
+    com.todoapp: INFO

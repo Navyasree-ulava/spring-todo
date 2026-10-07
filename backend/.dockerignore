@@ -1,0 +1,17 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+
+*.log
+.env
+.env.local
+application-local.yml
+
+Dockerfile
+.dockerignore
+README.md
