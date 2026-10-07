@@ -26,20 +26,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
 
     async function bootstrap() {
+      // These must NOT be awaited together in one Promise.all.
+      // /auth/me returns 401 when signed out, which rejects the whole batch and
+      // discards the providers result - leaving googleEnabled false forever, so
+      // the Google button only ever appeared for users who were already signed in
+      // and never on the login page where it actually matters.
+      const providersRequest = api
+        .get<{ google: boolean }>('/auth/providers')
+        .then((response) => response.google)
+        .catch(() => false)
+
+      let currentUser: User | null = null
       try {
-        const [me, providers] = await Promise.all([
-          api.get<User>('/auth/me'),
-          api.get<{ google: boolean }>('/auth/providers'),
-        ])
-        if (!cancelled) {
-          setUser(me)
-          setGoogleEnabled(providers.google)
-        }
+        currentUser = await api.get<User>('/auth/me')
       } catch {
         // 401 simply means signed out, which is a normal state - not an error.
-        if (!cancelled) setUser(null)
-      } finally {
-        if (!cancelled) setLoading(false)
+      }
+
+      const google = await providersRequest
+      if (!cancelled) {
+        setUser(currentUser)
+        setGoogleEnabled(google)
+      }
+      if (!cancelled) {
+        setLoading(false)
       }
     }
 
