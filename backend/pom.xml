@@ -64,6 +64,19 @@
 			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
 		</dependency>
 
+		<!-- Security: Nimbus JWT encoder/decoder used to issue our own session tokens -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+
+		<!-- IDE autocomplete for application.yml config keys -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
+
 		<!-- Test -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
