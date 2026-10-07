@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
@@ -71,11 +70,4 @@ export default function App() {
       </AuthProvider>
     </ThemeProvider>
   )
-}
-
-/** Keeps the document title in sync with the app name. */
-export function useDocumentTitle() {
-  useEffect(() => {
-    document.title = 'Tasks'
-  }, [])
 }

@@ -4,7 +4,23 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="description" content="A calm, fast to-do app." />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Set before first paint so the dark theme does not flash white on load -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme')
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          if (stored === 'dark' || (!stored && prefersDark)) {
+            document.documentElement.classList.add('dark')
+          }
+        } catch (e) {
+          /* localStorage can throw in private mode - the default light theme is fine */
+        }
+      })()
+    </script>
+    <title>Tasks</title>
   </head>
   <body>
     <div id="root"></div>
