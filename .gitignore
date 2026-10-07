@@ -1,0 +1,31 @@
+# ---- Java / Maven ----
+backend/target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# ---- Node / Frontend ----
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+
+# ---- Secrets (never commit) ----
+.env
+.env.local
+application-local.yml
+
+# ---- IDEs ----
+.idea/
+*.iml
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+nbproject/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
