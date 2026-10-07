@@ -30,6 +30,9 @@ import tools.jackson.databind.ObjectMapper;
 import com.todoapp.common.ApiError;
 import com.todoapp.security.AppUserDetailsService;
 import com.todoapp.security.JwtAuthenticationFilter;
+import com.todoapp.security.OAuth2AuthenticationFailureHandler;
+import com.todoapp.security.OAuth2SuccessHandler;
+import com.todoapp.security.TodoOAuth2UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -55,7 +58,9 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
-			ObjectMapper objectMapper) throws Exception {
+			ObjectMapper objectMapper, TodoOAuth2UserService todoOAuth2UserService,
+			OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2AuthenticationFailureHandler oAuth2FailureHandler)
+			throws Exception {
 
 		// CSRF is off because the session cookie is SameSite=Lax, which already stops
 		// the browser attaching it to cross-site state-changing requests. If the API
@@ -66,11 +71,14 @@ public class SecurityConfig {
 				// No server-side session: the JWT cookie is the entire session.
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
-						// Only the two public entry points. /api/auth/me is deliberately
+						// Only the public entry points. /api/auth/me is deliberately
 						// NOT here - it needs a session, so it falls through to
 						// authenticated() below and returns 401 when signed out.
 						.requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout")
 						.permitAll()
+						// Public so the sign-in screen can hide the Google button when
+						// no credentials are configured.
+						.requestMatchers(HttpMethod.GET, "/api/auth/providers").permitAll()
 						.requestMatchers("/oauth2/**", "/login/**", "/.well-known/**").permitAll()
 						.requestMatchers("/api/**").authenticated()
 						.anyRequest().permitAll())
@@ -92,9 +100,11 @@ public class SecurityConfig {
 		if (this.properties.google().isConfigured()) {
 			log.info("Google sign-in is enabled");
 			http.oauth2Login(oauth2 -> oauth2
-					// Default success URL is just "/", which a SPA ignores. Phase 5
-					// replaces this with a handler that mints our JWT cookie.
-					.defaultSuccessUrl("/", false));
+					.userInfoEndpoint(userInfo -> userInfo.userService(todoOAuth2UserService))
+					// Google returns to a backend URL, but the session is our JWT cookie.
+					// The success handler mints it and bounces back to the SPA.
+					.successHandler(oAuth2SuccessHandler)
+					.failureHandler(oAuth2FailureHandler));
 		}
 		else {
 			log.warn("""

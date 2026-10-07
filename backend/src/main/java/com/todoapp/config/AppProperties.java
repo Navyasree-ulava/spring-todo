@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * components rather than writing setters.
  */
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(Jwt jwt, Google google) {
+public record AppProperties(Jwt jwt, Google google, String frontendUrl, AccountLinking accountLinking) {
 
 	/**
 	 * @param secure set to true only behind HTTPS. A "Secure" cookie is not
@@ -33,6 +33,19 @@ public record AppProperties(Jwt jwt, Google google) {
 					&& !clientSecret.isBlank()
 					&& !clientSecret.startsWith("PASTE_");
 		}
+	}
+
+	/**
+	 * Controls whether a Google login may attach itself to an account that already
+	 * exists with the same email.
+	 * <p>
+	 * Linking is what lets one person sign in with either method and see the same
+	 * to-dos. It is only safe while the Google address is verified AND the existing
+	 * account's own address has been proven. This app never sends verification
+	 * emails, so set {@code ACCOUNT_LINKING_ENABLED=false} before exposing it to the
+	 * internet, or add real email verification first.
+	 */
+	public record AccountLinking(boolean enabled) {
 	}
 
 }

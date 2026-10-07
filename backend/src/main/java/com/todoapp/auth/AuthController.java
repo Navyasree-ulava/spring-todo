@@ -18,6 +18,7 @@ import com.todoapp.auth.dto.RegisterRequest;
 import com.todoapp.auth.dto.UserResponse;
 import com.todoapp.common.NotFoundException;
 import com.todoapp.config.AppProperties;
+import com.todoapp.config.Cookies;
 import com.todoapp.domain.User;
 import com.todoapp.repository.UserRepository;
 import com.todoapp.security.JwtService;
@@ -59,8 +60,17 @@ public class AuthController {
 	@PostMapping("/logout")
 	public ResponseEntity<Void> logout() {
 		return ResponseEntity.noContent()
-				.header(HttpHeaders.SET_COOKIE, clearedCookie().toString())
+				.header(HttpHeaders.SET_COOKIE, Cookies.clearedCookie(this.properties.jwt()).toString())
 				.build();
+	}
+
+	/**
+	 * Lets the frontend hide the "Continue with Google" button when no credentials
+	 * are configured, instead of offering a button that is guaranteed to fail.
+	 */
+	@GetMapping("/providers")
+	public java.util.Map<String, Boolean> providers() {
+		return java.util.Map.of("google", this.properties.google().isConfigured());
 	}
 
 	/** Lets the frontend re-hydrate its session on page load. */
@@ -85,29 +95,11 @@ public class AuthController {
 	private ResponseEntity<UserResponse> sessionFor(User user) {
 		String token = this.jwtService.generate(user);
 
-		ResponseCookie cookie = ResponseCookie.from(this.properties.jwt().cookieName(), token)
-				.httpOnly(true)
-				.secure(this.properties.jwt().secure())
-				// Lax lets the browser attach the cookie to same-site calls while
-				// blocking it on cross-site POSTs - our CSRF mitigation.
-				.sameSite("Lax")
-				.path("/")
-				.maxAge(this.properties.jwt().expiration())
-				.build();
+		ResponseCookie cookie = Cookies.sessionCookie(this.properties.jwt(), token);
 
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE, cookie.toString())
 				.body(UserResponse.from(user));
-	}
-
-	private ResponseCookie clearedCookie() {
-		return ResponseCookie.from(this.properties.jwt().cookieName(), "")
-				.httpOnly(true)
-				.secure(this.properties.jwt().secure())
-				.sameSite("Lax")
-				.path("/")
-				.maxAge(Duration.ZERO)
-				.build();
 	}
 
 }
