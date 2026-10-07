@@ -29,10 +29,10 @@ import tools.jackson.databind.ObjectMapper;
 
 import com.todoapp.common.ApiError;
 import com.todoapp.security.AppUserDetailsService;
+import com.todoapp.security.GoogleUserServices;
 import com.todoapp.security.JwtAuthenticationFilter;
 import com.todoapp.security.OAuth2AuthenticationFailureHandler;
 import com.todoapp.security.OAuth2SuccessHandler;
-import com.todoapp.security.TodoOAuth2UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -58,7 +58,7 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
-			ObjectMapper objectMapper, TodoOAuth2UserService todoOAuth2UserService,
+			ObjectMapper objectMapper, GoogleUserServices googleUserServices,
 			OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2AuthenticationFailureHandler oAuth2FailureHandler)
 			throws Exception {
 
@@ -100,7 +100,13 @@ public class SecurityConfig {
 		if (this.properties.google().isConfigured()) {
 			log.info("Google sign-in is enabled");
 			http.oauth2Login(oauth2 -> oauth2
-					.userInfoEndpoint(userInfo -> userInfo.userService(todoOAuth2UserService))
+					// Both services are registered because Spring picks one based on the
+					// requested scopes: openid routes through OIDC, its absence through
+					// plain OAuth2. Registering only the OAuth2 one left the OIDC path
+					// building a default user that our success handler could not read.
+					.userInfoEndpoint(userInfo -> userInfo
+							.userService(googleUserServices.oauth2UserService())
+							.oidcUserService(googleUserServices.oidcUserService()))
 					// Google returns to a backend URL, but the session is our JWT cookie.
 					// The success handler mints it and bounces back to the SPA.
 					.successHandler(oAuth2SuccessHandler)

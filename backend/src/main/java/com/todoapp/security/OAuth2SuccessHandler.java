@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +24,9 @@ import jakarta.servlet.http.HttpServletResponse;
  * Google hands control back to the browser at a backend URL, but this app's
  * session is our own JWT cookie - not whatever Spring set up for OAuth2.
  * <p>
- * So on success we mint a JWT, set it as the same httpOnly cookie the password
- * flow uses, then bounce to the frontend. From that point on the app cannot
- * tell whether you signed in with Google or a password, which is the point.
+ * On success we mint a JWT, set it as the same httpOnly cookie the password flow
+ * uses, then bounce to the frontend. From that point on nothing can tell whether
+ * you signed in with Google or a password, which is the point.
  */
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -45,11 +47,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {
 
-		TodoOAuth2User googleUser = (TodoOAuth2User) authentication.getPrincipal();
+		String email = resolveEmail(authentication);
 
-		User user = this.userRepository.findByEmailIgnoreCase(googleUser.getEmail())
+		User user = this.userRepository.findByEmailIgnoreCase(email)
 				.orElseThrow(() -> new IllegalStateException(
-						"Google sign-in succeeded but no account was created for " + googleUser.getEmail()));
+						"Google sign-in succeeded but no account exists for " + email));
 
 		String token = this.jwtService.generate(user);
 
@@ -60,6 +62,29 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 		log.info("Issued session cookie after Google sign-in for user id={}", user.getId());
 
 		super.onAuthenticationSuccess(request, response, authentication);
+	}
+
+	/**
+	 * The principal type depends on the scopes we asked for: requesting openid
+	 * produces an OIDC user, omitting it produces a plain OAuth2 user. Casting to
+	 * one specific type throws a ClassCastException on the other path, which
+	 * surfaces as a 500 whitelabel page - so both are handled explicitly.
+	 */
+	private String resolveEmail(Authentication authentication) {
+		Object principal = authentication.getPrincipal();
+
+		if (principal instanceof TodoOAuth2User google) {
+			return google.getEmail();
+		}
+		if (principal instanceof OidcUser oidc) {
+			return AccountLinkService.claim(oidc.getClaims(), "email");
+		}
+		if (principal instanceof OAuth2User oauth2) {
+			return oauth2.getName();
+		}
+
+		throw new IllegalStateException(
+				"Unsupported principal type " + principal.getClass().getName() + " after Google sign-in");
 	}
 
 }
