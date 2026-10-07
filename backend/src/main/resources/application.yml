@@ -4,6 +4,13 @@ spring:
   profiles:
     default: dev
 
+  config:
+    # Makes the documented `.env` workflow actually work. Without this Spring
+    # only sees real environment variables, and a .env file would be ignored -
+    # which is exactly the kind of thing that silently leaves Google login off.
+    # Covers both layouts: running from the repo root, and from backend/.
+    import: "optional:file:.env[.properties],optional:file:../.env[.properties]"
+
   jpa:
     # Flyway owns the schema. Hibernate only verifies it matches the entities.
     hibernate:

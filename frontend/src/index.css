@@ -1,0 +1,214 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design direction
+ * ----------------
+ * The goal is "quiet precision" - a calm, dense, typographic interface in the
+ * spirit of Linear or Things rather than a decorative dashboard.
+ *
+ * Deliberate choices, and why:
+ *  - Warm neutral ramp (stone) instead of pure grey. Pure #808080 greys read
+ *    clinical and cold; a trace of warmth makes long sessions easier on the eye.
+ *  - Teal as the only accent. It carries meaning (interactive, active) and is
+ *    deliberately not the indigo/violet every generated dashboard reaches for.
+ *  - Colour is reserved for data. Status and priority are the only things that
+ *    get saturated colour, so a red row always means exactly one thing.
+ *  - Borders over shadows. A 1px hairline separates without adding visual noise;
+ *    shadow is reserved for things that genuinely float (dialogs, menus).
+ *  - Modest radii (8px). Heavy rounding is a strong "generated" tell and makes
+ *    dense lists look like a pile of pills.
+ *  - System font stack. Inter is the default choice of nearly every AI-generated
+ *    UI; the native stack renders beautifully and costs nothing to download.
+ */
+:root {
+  --radius: 0.5rem;
+
+  --background: #fafaf9;
+  --foreground: #1c1917;
+
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+
+  --primary: #0f766e;
+  --primary-foreground: #f0fdfa;
+
+  --secondary: #f5f5f4;
+  --secondary-foreground: #292524;
+
+  --muted: #f5f5f4;
+  --muted-foreground: #78716c;
+
+  --accent: #f0efee;
+  --accent-foreground: #1c1917;
+
+  --destructive: #b91c1c;
+  --destructive-foreground: #fef2f2;
+
+  --border: #e7e5e4;
+  --input: #e7e5e4;
+  --ring: #0f766e;
+
+  /* Semantic data colours - only ever used for status and priority */
+  --priority-high: #b91c1c;
+  --priority-medium: #b45309;
+  --priority-low: #57534e;
+
+  --status-todo: #78716c;
+  --status-progress: #1d4ed8;
+  --status-done: #15803d;
+
+  --success: #15803d;
+  --warning: #b45309;
+}
+
+.dark {
+  --background: #0c0a09;
+  --foreground: #fafaf9;
+
+  --card: #1c1917;
+  --card-foreground: #fafaf9;
+
+  --popover: #1c1917;
+  --popover-foreground: #fafaf9;
+
+  /* Lighter teal on dark backgrounds for contrast; the 700 reads as muddy */
+  --primary: #2dd4bf;
+  --primary-foreground: #042f2e;
+
+  --secondary: #292524;
+  --secondary-foreground: #fafaf9;
+
+  --muted: #1c1917;
+  --muted-foreground: #a8a29e;
+
+  --accent: #292524;
+  --accent-foreground: #fafaf9;
+
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
+
+  --border: #292524;
+  --input: #292524;
+  --ring: #2dd4bf;
+
+  --priority-high: #f87171;
+  --priority-medium: #fbbf24;
+  --priority-low: #a8a29e;
+
+  --status-todo: #a8a29e;
+  --status-progress: #60a5fa;
+  --status-done: #4ade80;
+
+  --success: #4ade80;
+  --warning: #fbbf24;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-priority-high: var(--priority-high);
+  --color-priority-medium: var(--priority-medium);
+  --color-priority-low: var(--priority-low);
+  --color-status-todo: var(--status-todo);
+  --color-status-progress: var(--status-progress);
+  --color-status-done: var(--status-done);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /*
+   * Native stack rather than a webfont. Resolves to SF Pro on macOS/iOS and
+   * Segoe UI on Windows - both are well-hinted at small sizes, which matters a
+   * lot for a dense list. Also means no layout shift and no extra request.
+   */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', 'SF Mono', Menlo, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    /* Counters and dates line up when the digits are tabular */
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+
+  /* A visible, consistent focus ring - never remove it, only style it */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* Restrained scrollbar so the sidebar does not shout */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--muted-foreground) 25%, transparent);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--muted-foreground) 40%, transparent);
+  }
+}
+
+@layer utilities {
+  /* Small all-caps label used for section headers and stat captions */
+  .label-xs {
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+}

@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.AuthenticationMethod;
 
 /**
  * Registers Google as an OAuth2 client, but only when real credentials have been
@@ -33,6 +34,14 @@ public class GoogleOAuth2Config {
 				.clientSecret(properties.google().clientSecret())
 				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
 				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+				// Spring Security 6 dropped the built-in "common OAuth2 provider"
+				// shortcuts, so Google's endpoints must be spelled out. Leaving any
+				// of these blank fails at startup with "authorizationUri cannot be empty".
+				.authorizationUri("https://accounts.google.com/o/oauth2/v2/auth")
+				.tokenUri("https://oauth2.googleapis.com/token")
+				.jwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
+				.userInfoUri("https://openidconnect.googleapis.com/v1/userinfo")
+				.userInfoAuthenticationMethod(AuthenticationMethod.HEADER)
 				.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
 				.scope("openid", "email", "profile")
 				// Key the lookup on email, so the user service receives the address
