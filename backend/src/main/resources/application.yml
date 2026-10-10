@@ -25,10 +25,32 @@ spring:
     enabled: true
     baseline-on-migrate: true
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      # Fail fast rather than hanging a request for the OS TCP timeout.
+      connect-timeout: 2s
+      timeout: 2s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 1
+
 server:
   port: 8080
 
 app:
+  cache:
+    # Time-to-live is a SAFETY NET, not the correctness mechanism. Correctness
+    # comes from evicting on write. TTL only bounds how long a bug can hide
+    # stale data if an eviction is ever missed.
+    todo-ttl: ${TODO_CACHE_TTL:10m}
+    stats-ttl: ${STATS_CACHE_TTL:5m}
+    # Log a warning when Redis is unreachable instead of throwing. A cache
+    # outage should slow the app down, not break it.
+    fail-open: ${CACHE_FAIL_OPEN:true}
   jwt:
     # HS256 signing key - must be >= 32 bytes. Override with JWT_SECRET in production.
     secret: ${JWT_SECRET:dev-only-insecure-key-please-override-me-1234567890}

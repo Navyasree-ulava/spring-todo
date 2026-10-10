@@ -19,6 +19,24 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: todo-redis
+    restart: unless-stopped
+    # Bound memory with LRU eviction. Without a maxmemory policy Redis grows until
+    # the host OOMs, and with allkeys-lru it evicts the coldest key rather than
+    # refusing writes - which is the behaviour a cache wants.
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   backend:
     build:
       context: ./backend
@@ -29,11 +47,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/todoapp
       SPRING_DATASOURCE_USERNAME: todo
       SPRING_DATASOURCE_PASSWORD: todo
+      REDIS_HOST: redis
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-PASTE_YOUR_GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-PASTE_YOUR_GOOGLE_CLIENT_SECRET}
 
@@ -57,3 +78,4 @@ services:
 
 volumes:
   db-data:
+  redis-data:

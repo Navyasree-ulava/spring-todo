@@ -47,9 +47,8 @@ public class TodoController {
 			@RequestParam(required = false) TodoStatus status,
 			@RequestParam(required = false) Priority priority,
 			@RequestParam(required = false) String sort) {
-		return this.todoService.list(principal.getId(), search, status, priority, sort).stream()
-				.map(TodoResponse::from)
-				.toList();
+		// Service decides whether this shape is cacheable; filtered views are not.
+		return this.todoService.listCached(principal.getId(), search, status, priority, sort);
 	}
 
 	@GetMapping("/stats")
