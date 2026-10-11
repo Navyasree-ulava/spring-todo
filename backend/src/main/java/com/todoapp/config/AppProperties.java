@@ -22,7 +22,11 @@ public record AppProperties(Jwt jwt, Google google, String frontendUrl, AccountL
 	public record Jwt(String secret, Duration expiration, String cookieName, boolean secure) {
 	}
 
-	public record Google(String clientId, String clientSecret) {
+	/**
+	 * @param redirectUri pinned rather than derived from the Host header, so the
+	 *                   value Google sees never changes with what is in front
+	 */
+	public record Google(String clientId, String clientSecret, String redirectUri) {
 
 		/** False while the placeholders are still unfilled, so we can fail loudly. */
 		public boolean isConfigured() {

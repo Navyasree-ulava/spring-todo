@@ -42,8 +42,14 @@ public class GoogleOAuth2Config {
 				.jwkSetUri("https://www.googleapis.com/oauth2/v3/certs")
 				.userInfoUri("https://openidconnect.googleapis.com/v1/userinfo")
 				.userInfoAuthenticationMethod(AuthenticationMethod.HEADER)
-				.redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
 				.scope("openid", "email", "profile")
+				// Explicit rather than the "{baseUrl}" placeholder. baseUrl is derived
+				// from the Host header, so the value changed depending on whether the
+				// request arrived directly or through the Vite/nginx proxy - one
+				// yielded http://localhost:8080/... and the other http://localhost/...,
+				// which Google rejects with redirect_uri_mismatch. Pinning it makes the
+				// value identical no matter what sits in front.
+				.redirectUri(properties.google().redirectUri())
 				// Key the lookup on email, so the user service receives the address
 				// directly as the principal name.
 				.userNameAttributeName("email")
